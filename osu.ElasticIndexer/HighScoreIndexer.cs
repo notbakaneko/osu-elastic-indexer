@@ -76,15 +76,15 @@ namespace osu.ElasticIndexer
 
         private async Task endingTask()
         {
-            await Task.WhenAll(pendingTasks);
+            await Task.WhenAll(pendingTasks).ConfigureAwait(false);
             // Spin until queue and pendingTasks are empty.
             while (waitingCount > 0)
             {
                 var delayDuration = Math.Max(waitingCount, delay) * 100;
                 Console.WriteLine($@"Waiting for queues to empty...({defaultQueue.Count}) ({retryQueue.Count}) ({pendingTasks.Count}) delay for {delayDuration} ms");
 
-                await Task.Delay(delayDuration);
-                await Task.WhenAll(pendingTasks);
+                await Task.Delay(delayDuration).ConfigureAwait(false);
+                await Task.WhenAll(pendingTasks).ConfigureAwait(false);
             }
 
             retryQueue.CompleteAdding();
