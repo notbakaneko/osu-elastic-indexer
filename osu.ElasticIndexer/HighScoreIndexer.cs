@@ -21,7 +21,6 @@ namespace osu.ElasticIndexer
         public long? ResumeFrom { get; set; }
         public string Suffix { get; set; }
 
-        private readonly IDbConnection dbConnection;
         private readonly ElasticClient elasticClient;
 
         private readonly ConcurrentBag<Task<IBulkResponse>> pendingTasks = new ConcurrentBag<Task<IBulkResponse>>();
@@ -40,7 +39,6 @@ namespace osu.ElasticIndexer
         {
             queues = new [] { retryQueue, defaultQueue };
 
-            dbConnection = new MySqlConnection(AppSettings.ConnectionString);
             elasticClient = new ElasticClient
             (
                 new ConnectionSettings(new Uri(AppSettings.ElasticsearchHost))
@@ -145,7 +143,7 @@ namespace osu.ElasticIndexer
             {
                 long count = 0;
 
-                using (dbConnection)
+                using (var dbConnection = new MySqlConnection(AppSettings.ConnectionString))
                 {
                     dbConnection.Open();
                     // TODO: retry needs to be added on timeout
