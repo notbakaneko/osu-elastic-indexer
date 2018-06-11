@@ -70,6 +70,11 @@ namespace osu.ElasticIndexer
             }
 
             updateAlias(Name, index);
+
+            int workerThreads;
+            int completionPorts;
+            ThreadPool.GetAvailableThreads(out workerThreads, out completionPorts);
+            Console.WriteLine($"available threads: {workerThreads}, completion ports: {completionPorts}");
         }
 
         private void endingTask()
