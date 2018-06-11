@@ -92,7 +92,7 @@ namespace osu.ElasticIndexer
 
         private Task consumerLoop(string index)
         {
-            return Task.Run(() =>
+            return Task.Factory.StartNew(() =>
             {
                 while (!defaultQueue.IsCompleted || !retryQueue.IsCompleted)
                 {
@@ -136,12 +136,12 @@ namespace osu.ElasticIndexer
 
                     if (delay > 0) Interlocked.Decrement(ref delay);
                 }
-            });
+            }, TaskCreationOptions.LongRunning);
         }
 
         private Task<long> producerLoop(long? resumeFrom)
         {
-            return Task.Run(() =>
+            return Task.Factory.StartNew(() =>
             {
                 long count = 0;
 
@@ -161,7 +161,7 @@ namespace osu.ElasticIndexer
                 Console.WriteLine("Mark queue as completed.");
 
                 return count;
-            });
+            },TaskCreationOptions.LongRunning);
         }
 
         private void waitIfTooBusy()
