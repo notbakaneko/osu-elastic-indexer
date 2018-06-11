@@ -21,7 +21,7 @@ namespace osu.ElasticIndexer
         public long? ResumeFrom { get; set; }
         public string Suffix { get; set; }
 
-        private readonly ElasticClient elasticClient;
+        private static readonly ElasticClient elasticClient;
 
         private readonly ConcurrentBag<Task<IBulkResponse>> pendingTasks = new ConcurrentBag<Task<IBulkResponse>>();
 
@@ -35,14 +35,17 @@ namespace osu.ElasticIndexer
         // throttle control
         private int delay;
 
-        public HighScoreIndexer()
+        static HighScoreIndexer()
         {
-            queues = new [] { retryQueue, defaultQueue };
-
             elasticClient = new ElasticClient
             (
                 new ConnectionSettings(new Uri(AppSettings.ElasticsearchHost))
             );
+        }
+
+        public HighScoreIndexer()
+        {
+            queues = new [] { retryQueue, defaultQueue };
         }
 
         public void Run()
@@ -140,7 +143,7 @@ namespace osu.ElasticIndexer
 
                     if (delay > 0) Interlocked.Decrement(ref delay);
                 }
-            }, TaskCreationOptions.LongRunning);
+            }, TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach);
         }
 
         private Task<long> producerLoop(long? resumeFrom)
@@ -165,7 +168,7 @@ namespace osu.ElasticIndexer
                 Console.WriteLine("Mark queue as completed.");
 
                 return count;
-            },TaskCreationOptions.LongRunning);
+            },TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach);
         }
 
         private void waitIfTooBusy()
