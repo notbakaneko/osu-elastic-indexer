@@ -114,15 +114,15 @@ namespace osu.ElasticIndexer
 
                     var bulkDescriptor = new BulkDescriptor().Index(index).IndexMany(chunk);
 
-                    Task<IBulkResponse> task = elasticClient.BulkAsync(bulkDescriptor);
-                    pendingTasks.Add(task);
+                    elasticClient.BulkAsync(bulkDescriptor);
+                    // pendingTasks.Add(task);
 
-                    task.ContinueWith(t =>
-                    {
-                        // wait until after any requeueing needs to be done before removing the task.
-                        handleResult(task.Result, chunk);
-                        pendingTasks.TryTake(out task);
-                    });
+                    // task.ContinueWith(t =>
+                    // {
+                    //     // wait until after any requeueing needs to be done before removing the task.
+                    //     handleResult(task.Result, chunk);
+                    //     pendingTasks.TryTake(out task);
+                    // });
 
                     // TODO: Less blind-fire update.
                     // I feel like this is in the wrong place...
