@@ -42,6 +42,7 @@ namespace osu.ElasticIndexer
             Console.WriteLine($"{typeof(T)}, index `{indexName}`, chunkSize `{AppSettings.ChunkSize}`, resume `{resumeFrom}`");
             Console.WriteLine();
 
+            long count = 0;
             var start = DateTime.Now;
 
             using (var dbConnection = new MySqlConnection(AppSettings.ConnectionString))
@@ -50,17 +51,15 @@ namespace osu.ElasticIndexer
 
                 // TODO: retry needs to be added on timeout
                 var chunks = Model.Chunk<T>(dbConnection, AppSettings.ChunkSize, resumeFrom);
-
-                Parallel.ForEach(chunks, chunk =>
+                foreach (var chunk in chunks)
                 {
                     consumeChunk(chunk);
-
-                    var count = chunk.Count;
-                    var timeTaken = DateTime.Now - start;
-                    Console.WriteLine($"{count} records took {timeTaken}");
-                    if (count > 0) Console.WriteLine($"{count / timeTaken.TotalSeconds} records/s");
-                });
+                }
             }
+
+            var timeTaken = DateTime.Now - start;
+            Console.WriteLine($"{count} records took {timeTaken}");
+            if (count > 0) Console.WriteLine($"{count / timeTaken.TotalSeconds} records/s");
 
             updateAlias(Name, indexName);
         }
