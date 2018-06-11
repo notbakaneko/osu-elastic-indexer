@@ -90,9 +90,9 @@ namespace osu.ElasticIndexer
             retryQueue.CompleteAdding();
         }
 
-        private Task consumerLoop(string index)
+        private async Task consumerLoop(string index)
         {
-            return Task.Factory.StartNew(() =>
+            await Task.Factory.StartNew(() =>
             {
                 while (!defaultQueue.IsCompleted || !retryQueue.IsCompleted)
                 {
@@ -136,15 +136,15 @@ namespace osu.ElasticIndexer
 
                     if (delay > 0) Interlocked.Decrement(ref delay);
                 }
-            }, TaskCreationOptions.LongRunning);
+            }, TaskCreationOptions.LongRunning).ConfigureAwait(false);
         }
 
-        private Task<long> producerLoop(long? resumeFrom)
+        private async Task<long> producerLoop(long? resumeFrom)
         {
-            return Task.Factory.StartNew(() =>
-            {
-                long count = 0;
+            long count = 0;
 
+            await Task.Factory.StartNew(() =>
+            {
                 using (dbConnection)
                 {
                     dbConnection.Open();
@@ -159,9 +159,9 @@ namespace osu.ElasticIndexer
 
                 defaultQueue.CompleteAdding();
                 Console.WriteLine("Mark queue as completed.");
+            }, TaskCreationOptions.LongRunning).ConfigureAwait(false);
 
-                return count;
-            },TaskCreationOptions.LongRunning);
+            return count;
         }
 
         private void waitIfTooBusy()
