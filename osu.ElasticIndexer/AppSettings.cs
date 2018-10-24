@@ -48,6 +48,9 @@ namespace osu.ElasticIndexer
             if (!string.IsNullOrEmpty(config["polling_interval"]))
                 PollingInterval = int.Parse(config["polling_interval"]);
 
+            if (!string.IsNullOrEmpty(config["user_id"]))
+                UserId = int.Parse(config["user_id"]);
+
             var modesStr = config["modes"] ?? string.Empty;
             Modes = modesStr.Split(',', StringSplitOptions.RemoveEmptyEntries).Intersect(VALID_MODES).ToImmutableArray();
 
@@ -88,6 +91,8 @@ namespace osu.ElasticIndexer
         public static int BufferSize { get; private set; } = 5;
 
         public static long? ResumeFrom { get; private set; }
+
+        public static int? UserId { get; private set; }
 
         private static bool parseBool(string key)
         {

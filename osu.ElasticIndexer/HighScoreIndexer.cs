@@ -52,7 +52,8 @@ namespace osu.ElasticIndexer
                 indexCompletedArgs.Count = readerTask.Result;
                 indexCompletedArgs.CompletedAt = DateTime.Now;
 
-                updateAlias(Name, index);
+                if (AppSettings.UserId == null)
+                    updateAlias(Name, index);
                 IndexCompleted(this, indexCompletedArgs);
             }
             catch (AggregateException ae)
@@ -83,11 +84,17 @@ namespace osu.ElasticIndexer
                 {
                     long count = 0;
 
+                    var query = "pp is not null";
+                    if (AppSettings.UserId != null)
+                    {
+                        query += $" and user_id = {AppSettings.UserId}";
+                    }
+
                     while (true)
                     {
                         try
                         {
-                            var chunks = Model.Chunk<T>("pp is not null", AppSettings.ChunkSize, resumeFrom);
+                            var chunks = Model.Chunk<T>(query, AppSettings.ChunkSize, resumeFrom);
                             foreach (var chunk in chunks)
                             {
                                 dispatcher.Enqueue(chunk);
