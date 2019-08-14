@@ -9,6 +9,8 @@ namespace osu.ElasticIndexer
     {
         event EventHandler<IndexCompletedArgs> IndexCompleted;
 
+        string Mode { get; set; }
+
         /// <summary>
         /// The index's name.
         /// </summary>

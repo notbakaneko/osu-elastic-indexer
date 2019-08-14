@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
@@ -63,6 +64,10 @@ namespace osu.ElasticIndexer
             ELASTIC_CLIENT = new ElasticClient(new ConnectionSettings(new Uri(ElasticsearchHost)));
 
             UseDocker = Environment.GetEnvironmentVariable("DOCKER")?.Contains("1") ?? false;
+
+            foreach (var mode in VALID_MODES) {
+                IndexNames[mode] = config[$"index:{mode}"];
+            }
         }
 
         // same value as elasticsearch-net
@@ -95,6 +100,8 @@ namespace osu.ElasticIndexer
         public static long? ResumeFrom { get; private set; }
 
         public static bool UseDocker { get; private set; }
+
+        public static Dictionary<string, string> IndexNames { get; private set; } = new Dictionary<string, string>();
 
         private static bool parseBool(string key)
         {
