@@ -104,7 +104,7 @@ namespace osu.ElasticIndexer
                                     Console.WriteLine($"Got {chunk.Count} items from queue, found {scores.Count} matching scores");
 
                                     dispatcher.Enqueue(scores);
-                                    ScoreProcessQueue.CompleteQueued<T>(scoreIds);
+                                    ScoreProcessQueue.CompleteQueued<T>(chunk);
                                     count += scores.Count;
                                 }
                             }
