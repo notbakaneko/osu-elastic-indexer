@@ -66,6 +66,14 @@ namespace osu.ElasticIndexer
         public static void UpdateAsync(IndexMeta indexMeta)
         {
             ES_CLIENT.IndexDocumentAsync(indexMeta);
+
+            ES_CLIENT.Map<IndexMeta>(mappings => mappings.Meta(
+                m => m
+                    .Add("last_id", indexMeta.LastId)
+                    .Add("reset_queue_to", indexMeta.ResetQueueTo)
+                    .Add("schema", indexMeta.Schema) // TODO: separate schema and ready into different fields
+                    .Add("updated_at", indexMeta.UpdatedAt)
+            ).Index(indexMeta.Name));
         }
 
         public static IndexMeta GetByName(string name)

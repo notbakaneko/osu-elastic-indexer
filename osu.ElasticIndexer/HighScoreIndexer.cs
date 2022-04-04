@@ -233,6 +233,11 @@ namespace osu.ElasticIndexer
             // mapping every field but still want everything for _source.
             var json = File.ReadAllText(Path.GetFullPath("schemas/high_scores.json"));
             elasticClient.LowLevel.Indices.Create<DynamicResponse>(index, json);
+            // TODO: include schema version when creating index
+            // elasticClient.Map<T>(mappings => mappings
+            //     .Meta(m => m.Add("schema", AppSettings.Schema))
+            //     .Index(index)
+            // );
 
             return (index, aliased: false);
 
