@@ -17,6 +17,9 @@ namespace osu.ElasticIndexer.Commands
         [Option("--from", Description = "Score id to resume from")]
         public long? From { get; set; }
 
+        [Option("--ruleset", Description = "Filter to a specific ruleset")]
+        public int? Ruleset { get; set; }
+
         [Option("--switch", Description = "Update the configured schema in redis after completing")]
         public bool Switch { get; set; }
 
@@ -38,10 +41,14 @@ namespace osu.ElasticIndexer.Commands
 
             var chunks = ElasticModel.Chunk<SoloScore>(AppSettings.BatchSize, From);
 
-            foreach (var scores in chunks)
+            foreach (var chunk in chunks)
             {
                 if (cancellationToken.IsCancellationRequested)
                     break;
+
+                var scores = chunk;
+                if (Ruleset != null)
+                    scores = scores.Where(score => score.ruleset_id == Ruleset).ToList();
 
                 foreach (var score in scores)
                 {
@@ -50,7 +57,9 @@ namespace osu.ElasticIndexer.Commands
                     if (Verbose)
                         Console.WriteLine($"Pushing {score}");
 
+                    Console.WriteLine(score.ruleset_id.ToString());
                     Processor.PushToQueue(new ScoreItem(score));
+
                 }
 
                 if (!Verbose)
