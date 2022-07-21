@@ -28,8 +28,14 @@ namespace osu.ElasticIndexer
 
                 checkSchema();
 
+                var processor = new IndexQueueProcessor(metadata.Name, client, Stop);
+
                 using (new Timer(_ => checkSchema(), null, TimeSpan.Zero, TimeSpan.FromSeconds(5)))
-                    new IndexQueueProcessor(metadata.Name, client, Stop).Run(cts.Token);
+                    processor.Run(cts.Token);
+
+                // Spin until queue processor completes whatever it's doing.
+                while (processor.TotalInFlight != 0)
+                    Thread.Sleep(1000);
             }
         }
 

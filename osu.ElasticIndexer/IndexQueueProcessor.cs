@@ -15,6 +15,8 @@ namespace osu.ElasticIndexer
     {
         private static readonly string queue_name = $"score-index-{AppSettings.Schema}";
 
+        public long TotalInFlight => TotalDequeued - TotalProcessed - TotalErrors;
+
         private readonly Client client;
         private readonly string index;
 
