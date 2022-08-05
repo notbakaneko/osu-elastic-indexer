@@ -4,7 +4,9 @@
 using System;
 using System.Linq;
 using System.Threading;
+using Dapper;
 using McMaster.Extensions.CommandLineUtils;
+using MySqlConnector;
 
 namespace osu.ElasticIndexer.Commands
 {
@@ -66,28 +68,49 @@ namespace osu.ElasticIndexer.Commands
             var chunks = ElasticModel.Chunk<SoloScore>(AppSettings.BatchSize, from);
             SoloScore? last = null;
 
-            foreach (var scores in chunks)
+            using (var dbConnection = new MySqlConnection(AppSettings.ConnectionString))
             {
-                if (cancellationToken.IsCancellationRequested)
-                    break;
+                dbConnection.Open();
 
-                foreach (var score in scores)
+                foreach (var scores in chunks)
                 {
-                    score.country_code ??= "XX";
+                    if (cancellationToken.IsCancellationRequested)
+                        break;
 
-                    if (Verbose)
-                        Console.WriteLine($"Pushing {score}");
+                    var beatmapIds = scores.Select(score => score.beatmap_id);
 
-                    Processor.PushToQueue(new ScoreItem { Score = score });
+                    string query = "SELECT beatmap_id, playmode FROM osu_beatmaps WHERE beatmap_id in @beatmapIds";
+
+                    var playmodeLookup = dbConnection.Query(query, new { beatmapIds }).ToDictionary(
+                        row => (uint)row.beatmap_id,
+                        row => (int)row.playmode
+                    );
+
+                    foreach (var score in scores)
+                    {
+                        // just skip if beatmap doesn't exist to match query join behaviour.
+                        if (!playmodeLookup.ContainsKey(score.beatmap_id))
+                            continue;
+
+                        score.country_code ??= "XX";
+                        score.playmode = playmodeLookup[score.beatmap_id];
+
+                        Console.WriteLine(score.convert.ToString());
+
+                        if (Verbose)
+                            Console.WriteLine($"Pushing {score}");
+
+                        Processor.PushToQueue(new ScoreItem { Score = score });
+                    }
+
+                    last = scores.LastOrDefault();
+
+                    if (!Verbose)
+                        Console.WriteLine($"Pushed {last}");
+
+                    if (Delay > 0)
+                        Thread.Sleep(Delay);
                 }
-
-                last = scores.LastOrDefault();
-
-                if (!Verbose)
-                    Console.WriteLine($"Pushed {last}");
-
-                if (Delay > 0)
-                    Thread.Sleep(Delay);
             }
 
             return last?.id;
