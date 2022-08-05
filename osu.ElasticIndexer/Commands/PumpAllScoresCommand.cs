@@ -77,6 +77,8 @@ namespace osu.ElasticIndexer.Commands
                     if (cancellationToken.IsCancellationRequested)
                         break;
 
+                    var startTime = DateTime.Now;
+
                     var beatmapIds = scores.Select(score => score.beatmap_id);
 
                     string query = "SELECT beatmap_id, playmode FROM osu_beatmaps WHERE beatmap_id in @beatmapIds";
@@ -95,8 +97,6 @@ namespace osu.ElasticIndexer.Commands
                         score.country_code ??= "XX";
                         score.playmode = playmodeLookup[score.beatmap_id];
 
-                        Console.WriteLine(score.convert.ToString());
-
                         if (Verbose)
                             Console.WriteLine($"Pushing {score}");
 
@@ -107,6 +107,8 @@ namespace osu.ElasticIndexer.Commands
 
                     if (!Verbose)
                         Console.WriteLine($"Pushed {last}");
+
+                    Console.WriteLine(ConsoleColor.Cyan, (DateTime.Now - startTime).TotalMilliseconds.ToString());
 
                     if (Delay > 0)
                         Thread.Sleep(Delay);
