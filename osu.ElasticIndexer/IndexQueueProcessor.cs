@@ -96,7 +96,7 @@ namespace osu.ElasticIndexer
                 var exceptionTypeString = response.OriginalException?.GetType().ToString() ?? "null";
 
                 DogStatsd.Increment("server_error", 1, 1, new[] { "status:unknown", $"exception_type:{exceptionTypeString}" });
-                stop();
+                // stop();
 
                 return;
             }
